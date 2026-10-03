@@ -46,9 +46,9 @@ const interns = entriesWithContent.slice(1);
       </div>
     ) : (
       <>
-        {/* Featured — current role — with split timeline on right */}
+        {/* Featured — current role — with split timeline on right — aligned with internships 160px */}
         {deloitte && (
-          <section style="display: grid; grid-template-columns: 1fr 170px; gap: 1.5rem; align-items: start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+          <section style="display: grid; grid-template-columns: 1fr 185px; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
             <div style="min-width: 0;">
               <h3 style="font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.2rem;">{deloitte.entry.data.title}</h3>
               <p style="font-family: var(--font-serif); font-size: 0.92rem; color: var(--text-muted); margin: 0 0 0.7rem;">{deloitte.entry.data.employer}</p>
@@ -59,28 +59,33 @@ const interns = entriesWithContent.slice(1);
                   ))}
                 </p>
               )}
-              <div class="work-detail prose" style="max-width: none;">
+              <div class="prose prose--compact deloitte-detail" style="font-size: 0.92rem; max-width: none;">
                 <deloitte.Content />
               </div>
             </div>
-            <div style="border-left: 2px solid var(--border-strong); padding-left: 1rem; text-align: right; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 1rem;">
-              <div>
-                <p class="meta" style="margin: 0; white-space: nowrap;">Sept 2025 – Present</p>
-                <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.2rem 0 0;">CT DMV</p>
-              </div>
-              <div style="border-top: 1px solid var(--border); padding-top: 0.75rem;">
-                <p class="meta" style="margin: 0; white-space: nowrap;">Mar 2024 – Aug 2025</p>
-                <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.2rem 0 0;">OregonEligibility</p>
-              </div>
+            <div style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
+              <p class="meta" style="margin: 0; white-space: nowrap; font-size: 0.72rem;">{fmtRangeShort(deloitte.entry.data.date, (deloitte.entry.data as any).endDate)}</p>
+                  <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0; white-space: nowrap;">
+                {(() => {
+                  const s = deloitte.entry.data.date as Date;
+                  const e = (deloitte.entry.data as any).endDate as Date | string | undefined;
+                  const end = e instanceof Date ? e : e ? new Date() : s;
+                  const months = (end.getFullYear() - s.getFullYear()) * 12 + (end.getMonth() - s.getMonth()) + 1;
+                  const y = Math.floor(months / 12);
+                  const m = months % 12;
+                  if (y > 0) return `${y} yr${y>1?"s":""}${m?` ${m} mo`:""}`;
+                  return `${m} mo${m>1?"s":""}`;
+                })()}
+              </p>
             </div>
           </section>
         )}
 
-        {/* Internships — editorial list with vertical line on right indicating period */}
+        {/* Internships — editorial list with dates right-aligned */}
         {interns.length > 0 && (
           <div style="display: flex; flex-direction: column; gap: 1.75rem;">
             {interns.map(({ entry, Content }) => (
-              <section style="display: grid; grid-template-columns: 1fr 160px; gap: 1.5rem; align-items: start; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+              <section style="display: grid; grid-template-columns: 1fr 185px; gap: 1.25rem; align-items: start; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
                 <div style="min-width: 0;">
                   <h3 style="font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.2rem;">{entry.data.title}</h3>
                   <p style="font-family: var(--font-serif); font-size: 0.92rem; color: var(--text-muted); margin: 0 0 0.7rem;">{entry.data.employer}</p>
@@ -95,9 +100,9 @@ const interns = entriesWithContent.slice(1);
                     <Content />
                   </div>
                 </div>
-                <div style="border-left: 2px solid var(--border-strong); padding-left: 1rem; text-align: right; align-self: stretch; display: flex; flex-direction: column; justify-content: center;">
-                  <p class="meta" style="margin: 0; white-space: nowrap;">{fmtRangeLong(entry.data.date, (entry.data as any).endDate)}</p>
-                  <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0; white-space: nowrap;">
+                <div style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
+                  <p class="meta" style="margin: 0; font-size: 0.72rem; line-height: 1.35;">{fmtRangeLong(entry.data.date, (entry.data as any).endDate)}</p>
+                  <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0;">
                     {(() => {
                       const s = entry.data.date as Date;
                       const e = (entry.data as any).endDate as Date | string | undefined;
@@ -136,6 +141,13 @@ const interns = entriesWithContent.slice(1);
   }
   .prose--compact :global(h2) { font-size: 1rem; margin-top: 0; }
   .prose--compact :global(ul) { margin-left: 1rem; }
+  .deloitte-detail :global(h2) {
+    font-size: 1rem;
+    margin-top: 1.4rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--border-strong);
+    padding-left: 0.75rem;
+  }
   @media (max-width: 640px) {
     .work-detail :global(h2) { font-size: 1.05rem; }
   }
