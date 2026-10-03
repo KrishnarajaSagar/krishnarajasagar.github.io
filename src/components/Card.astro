@@ -1,0 +1,105 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  description?: string;
+  meta?: string;
+  tags?: string[];
+  icon?: "project" | "music" | "film" | "book";
+  footer?: string;
+  target?: string;
+  rel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+}
+const { href, title, description, meta, tags, icon, footer, target, rel, secondaryHref, secondaryLabel } = Astro.props;
+const isExternal = href.startsWith("http");
+const linkTarget = target ?? (isExternal ? "_blank" : undefined);
+const linkRel = rel ?? (isExternal ? "noopener" : undefined);
+---
+
+<div style="display: flex; flex-direction: column; border: 1px solid var(--border); background: white; transition: border-color 0.15s; min-height: 192px; position: relative; overflow: hidden;">
+  <a href={href} target={linkTarget} rel={linkRel} style="display: flex; flex-direction: column; flex: 1; padding: 1.35rem 1.2rem 0.6rem 1.2rem; text-decoration: none; color: inherit;">
+  {(meta || icon) && (
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.4rem;">
+      {meta ? <p class="meta" style="margin: 0;">{meta}</p> : <span />}
+      {icon && (
+        <span class="card-icon" aria-hidden="true" data-icon={icon}>
+          {icon === "project" && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          )}
+          {icon === "music" && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          )}
+          {icon === "film" && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20M17 2v20M2 12h20"/><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.12"/></svg>
+          )}
+          {icon === "book" && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          )}
+        </span>
+      )}
+    </div>
+  )}
+  <h3 style="font-family: var(--font-serif); font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text);">{title}</h3>
+  {description && <p style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; flex: 1;">{description}</p>}
+  {(tags && tags.length > 0 || footer) && (
+    <div style="margin-top: 0.6rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+      {tags && tags.length > 0 ? (
+        <p style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0;">
+          {tags.slice(0,3).map((t) => (
+            <span style="font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; background: var(--bg-subtle); border: 1px solid var(--border); padding: 0.15rem 0.4rem; color: var(--text-muted);">{t}</span>
+          ))}
+        </p>
+      ) : <span />}
+      {footer && <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); white-space: nowrap;">{footer}</span>}
+    </div>
+  )}
+  </a>
+  {secondaryHref && (
+    <a href={secondaryHref} style="margin: 0 1.2rem 1rem 1.2rem; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.04em; color: var(--text-muted); text-decoration: none; border-top: 1px solid var(--border); padding-top: 0.5rem; display: block;">{secondaryLabel ?? "View all →"}</a>
+  )}
+</div>
+
+<style>
+  div:hover { border-color: var(--border-strong); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .card-icon {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    color: var(--text-faint);
+    opacity: 0.6;
+    transition: transform 0.35s ease, opacity 0.35s ease, color 0.35s ease;
+    flex-shrink: 0;
+  }
+  a:hover .card-icon {
+    opacity: 1;
+    color: var(--accent);
+  }
+  a:hover .card-icon svg {
+    transform: rotate(8deg) scale(1.12);
+  }
+  .card-icon svg {
+    transition: transform 0.3s ease;
+    display: block;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .card-icon {
+      animation: cardIconFloat 4.2s ease-in-out infinite;
+      will-change: transform;
+    }
+    .card-icon[data-icon="project"] { animation-delay: 0s; }
+    .card-icon[data-icon="music"] { animation-delay: 0.6s; }
+    .card-icon[data-icon="film"] { animation-delay: 1.1s; }
+    .card-icon[data-icon="book"] { animation-delay: 1.6s; }
+  }
+  @keyframes cardIconFloat {
+    0%, 100% { transform: rotate(0); }
+    50% { transform: rotate(3deg); }
+  }
+  a:hover .card-icon {
+    animation-play-state: paused;
+  }
+</style>

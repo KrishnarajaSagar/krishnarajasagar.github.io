@@ -1,0 +1,27 @@
+---
+import Base from "../../layouts/Base.astro";
+import Card from "../../components/Card.astro";
+import { getCollection } from "astro:content";
+
+const entries = (await getCollection("work", ({data})=> data.status!=="draft")).sort((a,b)=> b.data.date.valueOf()-a.data.date.valueOf());
+const fmt = (d: Date) => d.toLocaleDateString("en-GB", { year:"numeric", month:"short", day:"numeric" });
+---
+
+<Base title="Work — Sagar" description="Professional work and experience.">
+  <div class="container" style="padding: 2rem 1.25rem;">
+    <h1 style="margin: 0.5rem 0;">Work</h1>
+    <p style="color: var(--text-muted); max-width: 60ch; margin-bottom: 1.5rem;">Professional identity and selected work. This section is intentionally separate from personal projects (see <a href="/life/projects">Life / Projects</a>).</p>
+    <hr class="divider" />
+    {entries.length===0 ? (
+      <div style="border: 1px solid var(--border); background: var(--bg-subtle); padding: 1.5rem;">
+        <p style="font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.4rem;">Work section is scaffolded.</p>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">Add Markdown files to <code>src/content/work/*.md</code> with frontmatter <code>title, date, role, employer, description, tags</code>. They will appear here automatically without code changes.</p>
+        <p class="meta" style="margin-top: 0.75rem;">Phase 2 — deferred per plan, Me + Life first.</p>
+      </div>
+    ) : (
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap:1rem;">
+        {entries.map((e)=> <Card href={`/work/${e.id}`} title={e.data.title} description={e.data.description} meta={`${e.data.role ? e.data.role+" · " : ""}${fmt(e.data.date)}`} tags={e.data.tags} />)}
+      </div>
+    )}
+  </div>
+</Base>

@@ -1,0 +1,59 @@
+---
+import Header from "../components/Header.astro";
+import "../styles/global.css";
+import socialLinks from "../data/social.json";
+
+interface Props {
+  title: string;
+  description?: string;
+  noIndex?: boolean;
+  bodyClass?: string;
+}
+
+const { title, description = "A small human corner of the internet — thoughts, music, films, books and projects.", noIndex = false, bodyClass } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    {noIndex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body class={bodyClass}>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <footer style="border-top: 1px solid var(--border); margin-top: 4rem; padding: 2rem 0;">
+      <div class="container" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <p class="meta">© {new Date().getFullYear()} — A living archive. Built with Astro.</p>
+        <p class="meta" style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+          {socialLinks.map((s: any, i: number) => (
+            <>
+              <a href={s.href} target="_blank" rel="noopener" style="color: var(--text-muted)">{s.label}</a>
+              {i < socialLinks.length - 1 && <span style="margin: 0 0.35rem">·</span>}
+            </>
+          ))}
+          <span style="margin: 0 0.35rem">·</span>
+          <a href="/me" style="color: var(--text-muted)">Me</a>
+          <span style="margin: 0 0.35rem">·</span>
+          <a href="/life" style="color: var(--text-muted)">Life</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

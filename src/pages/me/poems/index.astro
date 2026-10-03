@@ -1,0 +1,28 @@
+---
+import Base from "../../../layouts/Base.astro";
+import Card from "../../../components/Card.astro";
+import { getCollection } from "astro:content";
+
+const entries = (await getCollection("poems", ({ data }) => data.status !== "draft"))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const fmt = (d: Date) => d.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+---
+
+<Base title="Poems — Me — Sagar" description="Poems.">
+  <div class="container" style="padding: 2rem 1.25rem;">
+    <p class="meta" style="margin-bottom: 0.5rem;"><a href="/me">Me</a> / Poems</p>
+    <h1 style="margin-bottom: 0.5rem;">Poems</h1>
+    <p style="color: var(--text-muted); max-width: 60ch; margin-bottom: 1.5rem;">Poems - Text in a dope arrangement.</p>
+    <hr class="divider" />
+    {entries.length === 0 ? (
+      <p style="color: var(--text-muted); border: 1px dashed var(--border); padding: 1.25rem; text-align: center;">No poems yet.</p>
+    ) : (
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+        {entries.map((e) => (
+          <Card href={`/me/poems/${e.id}`} title={e.data.title} description={e.data.description} meta={fmt(e.data.date)} tags={e.data.tags} />
+        ))}
+      </div>
+    )}
+  </div>
+</Base>

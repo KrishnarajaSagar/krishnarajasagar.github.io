@@ -1,0 +1,37 @@
+---
+import Base from "../../../layouts/Base.astro";
+import Card from "../../../components/Card.astro";
+import SectionHeader from "../../../components/SectionHeader.astro";
+import { getGithubRepos } from "../../../lib/github";
+
+const ghRepos = await getGithubRepos();
+const fmtGh = (s: string) => new Date(s).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+---
+
+<Base title="Projects — Life — Sagar" description="Projects — single page with GitHub cards. Click to go to repo.">
+  <div class="container" style="padding: 2rem 1.25rem;">
+    <p class="meta"><a href="/life">Life</a> / Projects</p>
+    <h1 style="margin: 0.5rem 0;">Projects</h1>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Binary output that have made me happy, or made me learn.</p>
+    <hr class="divider" />
+
+    {ghRepos.length === 0 ? (
+      <p style="color: var(--text-muted); border: 1px dashed var(--border); padding: 1rem;">No repos — check <code>src/lib/github.ts ALLOWLIST</code> or add <code>GITHUB_TOKEN</code> for rate limits.</p>
+    ) : (
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+        {ghRepos.map((r) => (
+          <Card
+            href={r.html_url}
+            title={r.name}
+            description={r.description ?? "No description."}
+            meta={`${r.language ?? "—"} · ★${r.stargazers_count}`}
+            tags={["project", ...r.topics].slice(0, 3)}
+            icon="project"
+          />
+        ))}
+      </div>
+    )}
+
+    <p style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-faint); margin-top: 1rem;">Source: <code>src/lib/github.ts ALLOWLIST</code> → live GitHub API at build. Edit to add/remove repos.</p>
+  </div>
+</Base>

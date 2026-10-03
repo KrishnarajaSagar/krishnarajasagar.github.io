@@ -1,0 +1,223 @@
+---
+import Base from "../../../layouts/Base.astro";
+import Turntable from "../../../components/Turntable.astro";
+import musicData from "../../../data/music.json";
+
+const sorted = [...musicData].sort((a: any, b: any) => b.year - a.year);
+---
+
+<Base title="Music — Life — Sagar" description="Turntable — vertical scroll moves albums left/right, cover on turntable." bodyClass="music-turntable">
+  <div class="music-viewport" id="musicViewport">
+    <div class="music-top">
+      <p class="meta" style="margin: 0 0 0.35rem;"><a href="/life">Life</a> / Music</p>
+      <h1 style="margin: 0 0 0.25rem; font-size: 1.6rem;">Music</h1>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Albums that I've been pondering over.</p>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="side-cover left" id="leftCover" aria-hidden="true"></div>
+      <div class="turntable-frame" id="turntableFrame">
+        <Turntable cover={sorted[0]?.cover} title={sorted[0]?.title} />
+      </div>
+      <div class="side-cover right" id="rightCover" aria-hidden="true"></div>
+    </div>
+
+    <div class="details-panel" aria-live="polite">
+      <h2 id="detail-title" style="font-family: var(--font-serif); font-size: 1.35rem; margin: 0 0 0.25rem; text-align: center;">{sorted[0]?.title}</h2>
+      <p id="detail-artist" class="meta" style="margin: 0; text-align: center;">{sorted[0] ? `${sorted[0].artist} · ${sorted[0].year}` : ""}</p>
+      <p id="detail-tags" style="margin-top: 0.35rem; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); text-align: center;">{sorted[0]?.tags?.slice(0,2).join(" · ")}</p>
+    </div>
+
+    <p style="text-align: center; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-faint); margin: 0.75rem 0 0;"><a href="/life">← Life hub</a> · <span>scroll up/down to move</span></p>
+  </div>
+</Base>
+
+<script id="music-data" type="application/json" set:html={JSON.stringify(sorted)}></script>
+<script>
+  const data = JSON.parse(document.getElementById("music-data")?.textContent || "[]");
+  const viewport = document.getElementById("musicViewport");
+  const stage = document.getElementById("stage");
+  const leftEl = document.getElementById("leftCover");
+  const rightEl = document.getElementById("rightCover");
+  const turntableImage = document.querySelector(".turntable-root image") as unknown as SVGImageElement | null;
+  const titleEl = document.getElementById("detail-title");
+  const artistEl = document.getElementById("detail-artist");
+  const tagsEl = document.getElementById("detail-tags");
+
+  const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  let idx = 0;
+  // Deep link: if coming from Life hub with #slug, focus that album
+  const initialHash = decodeURIComponent(location.hash.slice(1));
+  if (initialHash) {
+    const found = data.findIndex((d: any) => slugify(d.title) === initialHash);
+    if (found >= 0) idx = found;
+  }
+
+  function render() {
+    if (!data.length) return;
+    const n = data.length;
+    const cur = data[idx % n];
+    const prev = data[(idx - 1 + n) % n];
+    const next = data[(idx + 1) % n];
+
+    if (turntableImage && cur.cover) {
+      turntableImage.setAttribute("href", cur.cover);
+      (turntableImage as any).setAttributeNS("http://www.w3.org/1999/xlink", "href", cur.cover);
+    }
+    if (titleEl) titleEl.textContent = cur.title;
+    if (artistEl) artistEl.textContent = `${cur.artist} · ${cur.year}`;
+    if (tagsEl) tagsEl.textContent = cur.tags?.slice(0,2).join(" · ") ?? "";
+
+    if (leftEl) {
+      leftEl.innerHTML = prev.cover ? `<img src="${prev.cover}" alt="" loading="lazy" />` : `<div class="side-fallback">${prev.title}</div>`;
+      leftEl.setAttribute("aria-label", prev.title);
+    }
+    if (rightEl) {
+      rightEl.innerHTML = next.cover ? `<img src="${next.cover}" alt="" loading="lazy" />` : `<div class="side-fallback">${next.title}</div>`;
+      rightEl.setAttribute("aria-label", next.title);
+    }
+
+    // Keep URL hash in sync for deep link/share without page jump
+    const slug = slugify(cur.title);
+    if (location.hash.slice(1) !== slug) {
+      history.replaceState(null, "", `#${slug}`);
+    }
+  }
+
+  function go(delta: number) {
+    if (!data.length) return;
+    idx = (idx + delta + data.length) % data.length;
+    render();
+  }
+
+  window.addEventListener("hashchange", () => {
+    const h = decodeURIComponent(location.hash.slice(1));
+    const found = data.findIndex((d: any) => slugify(d.title) === h);
+    if (found >= 0 && found !== idx) {
+      idx = found;
+      render();
+    }
+  });
+
+  // Vertical wheel → horizontal move (keep horizontal swipe for browser back/forward)
+  let lastWheel = 0;
+  if (viewport) {
+    viewport.addEventListener("wheel", (e) => {
+      const isVertical = Math.abs(e.deltaY) > Math.abs(e.deltaX);
+      if (!isVertical) return; // allow horizontal swipe to bubble to browser history
+      if (Math.abs(e.deltaY) < 5) return;
+      const now = Date.now();
+      if (now - lastWheel < 600) return;
+      e.preventDefault();
+      lastWheel = now;
+      go(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+
+    let touchStartY = 0;
+    viewport.addEventListener("touchstart", (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
+    viewport.addEventListener("touchend", (e) => {
+      const dy = touchStartY - e.changedTouches[0].clientY;
+      if (Math.abs(dy) > 30) go(dy > 0 ? 1 : -1);
+    }, { passive: true });
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); go(1); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); go(-1); }
+  });
+
+  render();
+</script>
+
+<style>
+  :global(body.music-turntable) {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100dvh;
+    background: #f6f1e6;
+    overscroll-behavior-x: auto;
+    overscroll-behavior-y: none;
+  }
+  :global(body.music-turntable main) {
+    height: calc(100dvh - 56px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0;
+    overscroll-behavior-x: auto;
+  }
+  :global(body.music-turntable footer) { display: none; }
+  .music-viewport {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.1rem 1.25rem 0.75rem;
+    box-sizing: border-box;
+    overflow-x: visible;
+    overflow-y: hidden;
+  }
+  .music-top { flex-shrink: 0; text-align: left; padding-bottom: 0.5rem; }
+  .stage {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0.5rem 0;
+  }
+  .turntable-frame {
+    flex: 0 0 auto;
+    width: min(460px, 52vw);
+    z-index: 2;
+  }
+  .side-cover {
+    flex: 0 0 148px;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fdf6e3;
+    border: 1px solid #e6d9b8;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    opacity: 0.38;
+    filter: blur(0.9px) grayscale(0.2);
+    transform: scale(0.86);
+    transition: opacity 0.28s, filter 0.28s, transform 0.28s;
+  }
+  .side-cover.left { transform: translateX(-32%) scale(0.86); }
+  .side-cover.right { transform: translateX(32%) scale(0.86); }
+  .side-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .side-fallback {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 0.6rem;
+    font-family: var(--font-serif);
+    font-size: 0.85rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .details-panel {
+    flex-shrink: 0;
+    text-align: center;
+    min-height: 3.2rem;
+    padding: 0.2rem 0;
+  }
+
+  @media (max-width: 860px) {
+    .turntable-frame { width: min(360px, 68vw); }
+    .side-cover { flex-basis: 110px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .side-cover { transition: none; }
+  }
+</style>

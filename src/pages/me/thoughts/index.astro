@@ -1,0 +1,185 @@
+---
+import Base from "../../../layouts/Base.astro";
+import thoughtsData from "../../../data/thoughts.json";
+
+type Thought = { title: string; description?: string; date: string; featured?: boolean; color?: number };
+const thoughts = (thoughtsData as Thought[]).sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+
+const truncateTitle = (s: string, n = 65) => s.length > n ? s.slice(0, n).trimEnd() + "…" : s;
+const truncateDesc = (s: string | undefined, n = 140) => {
+  if (!s) return undefined;
+  return s.length > n ? s.slice(0, n).trimEnd() + "…" : s;
+};
+
+const colorMap: Record<number, string> = {
+  1: "#fef08a",
+  2: "#fecaca",
+  3: "#bbf7d0",
+  4: "#bfdbfe",
+};
+
+const tilt = (i: number) => {
+  const h = (i * 9301 + 49297) % 233280;
+  return ((h / 233280) * 5 - 2.5).toFixed(2);
+};
+const yOffset = (i: number) => {
+  const h = (i * 49297 + 233280) % 233280;
+  return ((h / 233280) * 8 - 4).toFixed(1);
+};
+---
+
+<Base title="Thoughts — Sagar" description="A whole-page clipboard of thoughts — pinned, slanted, readable." bodyClass="thoughts-clipboard">
+  <div class="viewport-board">
+    <div class="board-inner">
+      <div class="board-grid">
+        <!-- Title as central sticky -->
+        <div class="note note--title">
+          <h1 class="note-title" style="font-size: 1.6rem; line-height: 1.15;">Thoughts</h1>
+          <p class="note-desc" style="font-size: 0.95rem; color: #3a3a3a;">Pieces of mind disguised as sticky notes.</p>
+          <p class="meta" style="margin-top: 0.5rem; font-size: 0.68rem;">Me / Thoughts · {thoughts.length} {thoughts.length === 1 ? "note" : "notes"}</p>
+        </div>
+
+        {thoughts.map((t, i) => {
+          const bg = colorMap[t.color ?? 1] ?? colorMap[1];
+          const r = tilt(i);
+          const y = yOffset(i);
+          return (
+            <div class="note" style={`background: ${bg}; --r: ${r}deg; --y: ${y}px`}>
+              <h3 class="note-title">{truncateTitle(t.title)}</h3>
+              {truncateDesc(t.description) && <p class="note-desc">{truncateDesc(t.description)}</p>}
+            </div>
+          );
+        })}
+      </div>
+
+      {thoughts.length === 0 && (
+        <p style="color: #5a4a33; background: rgba(255,255,255,0.7); border: 1px dashed #8b7a5a; padding: 1.25rem; max-width: 500px; margin: 2rem auto;">No thoughts yet — edit <code>src/data/thoughts.json</code> (single file for all notes) — fields: title, description, date, featured, color 1…4</p>
+      )}
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* Whole-page clipboard: override body + make header translucent (keep header) */
+  :global(body.thoughts-clipboard) {
+    background: #d6c7a8;
+  }
+  :global(body.thoughts-clipboard header) {
+    background: rgba(253, 252, 250, 0.58) !important;
+    backdrop-filter: blur(8px) saturate(1.15);
+    border-bottom-color: rgba(0,0,0,0.09) !important;
+  }
+  :global(body.thoughts-clipboard footer) {
+    background: rgba(253, 252, 250, 0.72);
+    margin-top: 0 !important;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  :global(body.thoughts-clipboard main) {
+    padding: 0;
+  }
+
+  .viewport-board {
+    position: relative;
+    min-height: 100dvh;
+    /* HQ clipboard paper: base + wood grain + subtle ruled lines + noise */
+    background-color: #d8c9a8;
+    background-image:
+      /* subtle paper noise */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"),
+      /* wood grain vertical */
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 18px),
+      /* faint horizontal ruled */
+      repeating-linear-gradient(transparent 0 27px, rgba(0,0,0,0.045) 27px 28px),
+      /* speckles */
+      radial-gradient(circle at 18% 22%, rgba(0,0,0,0.06) 1px, transparent 1px),
+      radial-gradient(circle at 62% 68%, rgba(0,0,0,0.05) 1px, transparent 1px);
+    background-size: 140px 140px, 18px 100%, 100% 28px, 60px 60px, 80px 80px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    padding: 56px 1.25rem 3rem;
+    overflow-x: clip;
+  }
+
+  .board-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .board-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.4rem 1.1rem;
+    align-items: start;
+    padding: 0.5rem 0;
+  }
+
+  .note {
+    position: relative;
+    min-height: 160px;
+    padding: 1.15rem 1.1rem 1rem;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 4px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.11);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    /* more random slant via CSS var --r and --y set inline per note */
+    transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px));
+    transition: transform .18s ease, box-shadow .18s ease;
+    will-change: transform;
+  }
+  .note--title {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 560px;
+    justify-self: center;
+    min-height: 150px;
+    padding: 1.5rem 1.4rem 1.2rem;
+    background: #fffef0 !important;
+    border: 1px solid rgba(0,0,0,.1);
+    box-shadow: 3px 6px 16px rgba(0,0,0,.16), 0 2px 4px rgba(0,0,0,.1);
+    transform: rotate(0.5deg) !important;
+    text-align: left;
+  }
+  .note-title {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    line-height: 1.25;
+    color: var(--text);
+    margin: 0;
+  }
+  .note-desc {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #2b2b2b;
+    margin: 0;
+  }
+  .note:hover { transform: rotate(0deg) translateY(0px) scale(1.02) !important; box-shadow: 4px 8px 18px rgba(0,0,0,.2); z-index: 3; }
+
+  /* pin dot */
+  .note::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ff7a7a 28%, #8b1a1a 100%);
+    box-shadow: 0 1px 3px rgba(0,0,0,.35);
+    opacity: .97;
+  }
+  .note--title::before {
+    background: radial-gradient(circle at 30% 30%, #6bb8ff 28%, #1e3a5f 100%);
+  }
+
+  @media (max-width: 640px) {
+    .viewport-board { padding: 32px 1rem 2rem; }
+    .board-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .note, .note--title { transform: none !important; }
+    .note--title { grid-column: 1 / -1; max-width: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .note { transform: none !important; transition: none !important; }
+  }
+</style>
