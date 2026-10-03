@@ -44,6 +44,10 @@ const work = defineCollection({
         demo: z.string().url().optional(),
       })
       .optional(),
+    endDate: z.preprocess(
+      (v) => (typeof v === "string" && v.toLowerCase() === "present" ? "Present" : v),
+      z.union([z.coerce.date(), z.literal("Present")]).optional()
+    ),
   }),
 });
 

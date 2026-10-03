@@ -7,13 +7,19 @@ export async function getStaticPaths() {
 }
 const { entry } = Astro.props;
 const { Content } = await render(entry);
-const fmt = (d: Date) => d.toLocaleDateString("en-GB", { month:"long", day:"numeric", year:"numeric" });
+const fmtLong = (d: Date) => d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+const fmtRange = (s: Date, e?: Date | string) => {
+  const start = fmtLong(s);
+  if (!e) return start;
+  if (typeof e === "string") return `${start} – ${e}`;
+  return `${start} – ${fmtLong(e)}`;
+};
 ---
 <Base title={`${entry.data.title} — Work — Sagar`} description={entry.data.description}>
   <article class="container" style="padding: 2rem 1.25rem;">
     <p class="meta"><a href="/work">Work</a></p>
     <h1 style="margin: 0.5rem 0 0.4rem;">{entry.data.title}</h1>
-    <p class="meta" style="margin-bottom:0.6rem;">{[entry.data.role, entry.data.employer].filter(Boolean).join(" · ")}{` · ${fmt(entry.data.date)}`}</p>
+    <p class="meta" style="margin-bottom:0.6rem;">{[entry.data.role, entry.data.employer].filter(Boolean).join(" · ")}{` · ${fmtRange(entry.data.date, (entry.data as any).endDate)}`}</p>
     {entry.data.description && <p style="color: var(--text-muted); max-width:60ch; margin-bottom:1.25rem;">{entry.data.description}</p>}
     <hr class="divider" style="max-width: var(--max-width);" />
     <div class="prose"><Content /></div>
