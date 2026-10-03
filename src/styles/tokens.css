@@ -1,0 +1,30 @@
+:root {
+  /* Palette - restrained editorial per docs:656 */
+  --bg: #fdfcfa;
+  --bg-subtle: #f5f3f0;
+  --text: #1a1a1a;
+  --text-muted: #6b6b6b;
+  --text-faint: #9a9a9a;
+  --accent: #1e3a5f;
+  --accent-hover: #152a45;
+  --border: #e8e4df;
+  --border-strong: #d4cfc8;
+
+  /* Typography - serif editorial + sans + mono per docs:636 */
+  --font-serif: "Fraunces", "Newsreader", Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+
+  /* Layout */
+  --max-width: 72ch;
+  --max-width-wide: 1100px;
+  --radius: 4px;
+}

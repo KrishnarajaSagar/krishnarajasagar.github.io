@@ -1,0 +1,51 @@
+---
+import Base from "../../layouts/Base.astro";
+import Card from "../../components/Card.astro";
+import SectionHeader from "../../components/SectionHeader.astro";
+import musicData from "../../data/music.json";
+import filmsData from "../../data/films.json";
+import booksData from "../../data/books.json";
+import { getGithubRepos } from "../../lib/github";
+
+const ghProjects = await getGithubRepos();
+const fmtGh = (s: string) => new Date(s).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+
+// Adapt single-file data to card shape (no detail pages) — max 4 per section
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const musicItems = musicData.slice(0,4).map((m: any) => ({ title: m.title, description: String(m.year), meta: m.artist, tags: m.tags, icon: "music" as const, href: `/life/music#${slugify(m.title)}` }));
+const filmItems = filmsData.slice(0,4).map((f: any) => ({ title: f.title, description: String(f.year), meta: f.kind, tags: f.tags, icon: "film" as const }));
+const bookItems = booksData.slice(0,4).map((b: any) => ({ title: b.title, description: String(b.year), meta: b.author, tags: b.tags, icon: "book" as const }));
+const projectItems = ghProjects.slice(0,4).map((r: any) => ({ title: r.name, description: r.description ?? "No description.", meta: `${r.language ?? "—"} · ★${r.stargazers_count}`, tags: ["project", ...r.topics].slice(0,3), href: r.html_url, icon: "project" as const }));
+
+const categories = [
+  { label: "Projects", count: ghProjects.length, href: "/life/projects", items: projectItems, desc: "Binary output that have made me happy, or made me learn." },
+  { label: "Music", count: musicData.length, href: "/life/music", items: musicItems, desc: "Albums that I've been pondering over." },
+  { label: "Films", count: filmsData.length, href: "/life/films", items: filmItems.map((i) => ({ ...i, href: "/life/films" })), desc: "Life as a kaleidoscope." },
+  { label: "Books", count: booksData.length, href: "/life/books", items: bookItems.map((i) => ({ ...i, href: "/life/books" })), desc: "Portals to unknown worlds." },
+];
+---
+
+<Base title="Life — Sagar" description="The archive: projects, music, films, books. A collection that grows over time.">
+  <div class="container" style="padding: 2rem 1.25rem;">
+    <h1 style="margin-bottom: 0.5rem;">Life</h1>
+    <p style="color: var(--text-muted); max-width: 60ch; margin-bottom: 0.3rem;">The lived archive - not curated for performance, but for remembering.</p>
+    <hr class="divider" />
+
+    <div style="display: grid; gap: 2.5rem;">
+      {categories.map((cat) => (
+        <section>
+          <SectionHeader kicker={`${cat.count} ${cat.count===1 ? "entry" : "entries"}`} title={cat.label} description={cat.desc} href={cat.href} />
+          {cat.items.length===0 ? (
+            <p style="color: var(--text-muted); border: 1px dashed var(--border); padding: 1rem; font-size: 0.92rem;">No entries yet — add to <code>src/data/{cat.label.toLowerCase()}.json</code>{cat.label==="Projects" ? " or src/content/projects/*.md" : ""}</p>
+          ) : (
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+              {cat.items.map((e: any) => (
+                <Card href={e.href} title={e.title} description={e.description} meta={e.meta} tags={e.tags} icon={e.icon} footer={(e as any).footer} />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
+    </div>
+  </div>
+</Base>

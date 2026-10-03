@@ -1,0 +1,38 @@
+---
+import Base from "../../../layouts/Base.astro";
+import filmsData from "../../../data/films.json";
+---
+
+<Base title="Films & Shows — Life — Sagar" description="Films & shows — title, kind, year.">
+  <div class="container" style="padding: 2rem 1.25rem;">
+    <p class="meta"><a href="/life">Life</a> / Films</p>
+    <h1 style="margin: 0.5rem 0;">Films & Shows</h1>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Life as a kaleidoscope.</p>
+    <hr class="divider" />
+    {filmsData.length===0 ? <p style="color: var(--text-muted);">No entries yet — add to <code>src/data/films.json</code></p> : (
+      <div style="border: 1px solid var(--border);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.92rem;">
+          <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--border-strong); background: var(--bg-subtle);">
+              <th style="padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;">Title</th>
+              <th style="padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;">Kind</th>
+              <th style="padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;">Year</th>
+              <th style="padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;">Tags</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filmsData.map((f: any) => (
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.6rem 0.8rem; font-family: var(--font-serif); font-weight: 600;">{f.title}</td>
+                <td style="padding: 0.6rem 0.8rem;"><span style="font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; background: var(--bg-subtle); border: 1px solid var(--border); padding: 0.15rem 0.4rem;">{f.kind}</span></td>
+                <td style="padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.78rem;">{f.year}</td>
+                <td style="padding: 0.6rem 0.8rem;"><span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">{f.tags?.join(" · ")}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+    <p style="font-family: var(--font-mono); font-size: 0.78rem; margin-top: 1rem;"><a href="/life">← Life hub</a></p>
+  </div>
+</Base>

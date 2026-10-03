@@ -1,0 +1,267 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("poems", ({ data }) => data.status !== "draft");
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const fmt = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+// Raw poem lines and stanza grouping (preserve stanzas, do not break them across pages)
+const rawBody: string = (entry as any).body ?? "";
+const allLinesRaw: string[] = rawBody.replace(/\r/g, "").split("\n");
+while (allLinesRaw.length && allLinesRaw[0].trim() === "") allLinesRaw.shift();
+while (allLinesRaw.length && allLinesRaw[allLinesRaw.length - 1].trim() === "") allLinesRaw.pop();
+
+// Group into stanzas (blank line = stanza separator)
+const stanzas: string[][] = [];
+let cur: string[] = [];
+for (const line of allLinesRaw) {
+  if (line.trim() === "") {
+    if (cur.length) {
+      stanzas.push([...cur]);
+      cur = [];
+    }
+  } else {
+    cur.push(line);
+  }
+}
+if (cur.length) stanzas.push([...cur]);
+
+// Pagination with stanza integrity: do not split a stanza across pages
+// page 560px, line-height 22px -> tighter spacing, smaller font fixes bottom cut
+const FIRST_LEFT_CAP = 17; // left first page has header, so fewer lines for poem
+const PAGE_CAP = 24; // standard page capacity at 22px line-height -> ~560px
+const pages: string[][] = [[]];
+const caps: number[] = [FIRST_LEFT_CAP, PAGE_CAP];
+let curPage = 0;
+const ensurePage = (idx: number) => {
+  while (pages.length <= idx) {
+    pages.push([]);
+    caps.push(PAGE_CAP);
+  }
+};
+
+for (let si = 0; si < stanzas.length; si++) {
+  const stanza = stanzas[si];
+  const need = stanza.length + (si < stanzas.length - 1 ? 1 : 0); // +1 blank separator
+  ensurePage(curPage);
+  // if stanza doesn't fit and current page already has content, move to next page
+  if (pages[curPage].length + need > caps[curPage] && pages[curPage].length > 0) {
+    curPage++;
+    ensurePage(curPage);
+  }
+  // if stanza still larger than page capacity (very long stanza), split across pages (rare)
+  if (need > caps[curPage]) {
+    let sIdx = 0;
+    while (sIdx < stanza.length) {
+      ensurePage(curPage);
+      const space = caps[curPage] - pages[curPage].length;
+      if (space <= 0) {
+        curPage++;
+        ensurePage(curPage);
+        continue;
+      }
+      const take = Math.min(space, stanza.length - sIdx);
+      pages[curPage].push(...stanza.slice(sIdx, sIdx + take));
+      sIdx += take;
+      if (sIdx < stanza.length) {
+        curPage++;
+      }
+    }
+    if (si < stanzas.length - 1) {
+      ensurePage(curPage);
+      if (pages[curPage].length >= caps[curPage]) {
+        curPage++;
+        ensurePage(curPage);
+      }
+      pages[curPage].push("");
+    }
+  } else {
+    pages[curPage].push(...stanza);
+    if (si < stanzas.length - 1) pages[curPage].push("");
+  }
+}
+
+// Trim trailing empty pages (e.g. 4th page when content stops at 3rd)
+while (pages.length > 0) {
+  const last = pages[pages.length - 1];
+  const isEmpty = last.length === 0 || last.every((l) => l.trim() === "");
+  if (isEmpty) {
+    pages.pop();
+    caps.pop();
+  } else break;
+}
+
+// Build spreads: pairs of pages (left/right) — filter out empty spreads/pages
+type Spread = { left: string[]; right: string[] };
+const spreads: Spread[] = [];
+for (let i = 0; i < pages.length; i += 2) {
+  const left = pages[i] ?? [];
+  const right = pages[i + 1] ?? [];
+  const leftHas = left.length > 0 && left.some((l) => l.trim() !== "" || l === "");
+  // For first spread, left is header page: always keep it even if poem lines empty (has title/desc)
+  const keepLeft = i === 0 ? true : left.length > 0;
+  const keepRight = right.length > 0 && right.some((l) => l.trim() !== "");
+  if (keepLeft || keepRight) {
+    spreads.push({ left: keepLeft ? left : [], right: keepRight ? right : [] });
+  }
+}
+if (spreads.length === 0) spreads.push({ left: [], right: [] });
+---
+
+<Base title={`${entry.data.title} — Poems — Sagar`} description={entry.data.description}>
+  <div class="poem-binder-wrap">
+    <p class="meta" style="max-width: 1100px; margin: 0 auto 0.85rem; padding: 0 1.25rem;"><a href="/me">Me</a> / <a href="/me/poems">Poems</a></p>
+
+    <div class="binder">
+      {spreads.map((spread, si) => {
+        const hasLeft = si === 0 ? true : spread.left.length > 0;
+        const hasRight = spread.right.length > 0;
+        const single = (hasLeft ? 1 : 0) + (hasRight ? 1 : 0) === 1;
+        return (
+          <div class={`spread ${single ? "spread--single" : ""}`}>
+            {hasLeft && (
+              <div class="page page--left">
+                {si === 0 ? (
+                  <div class="page-header">
+                    <h1 class="poem-title">{entry.data.title}</h1>
+                    {entry.data.description && <p class="poem-desc">{entry.data.description}</p>}
+                    <p class="meta poem-date">{fmt(entry.data.date)}</p>
+                    <hr class="page-rule" />
+                  </div>
+                ) : null}
+                <div class="page-lines">
+                  {spread.left.map((line) => (
+                    <div class="line">{line === "" ? "\u00A0" : line}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {hasRight && (
+              <div class="page page--right">
+                <div class="page-lines">
+                  {spread.right.map((line) => (
+                    <div class="line">{line === "" ? "\u00A0" : line}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+
+    <p style="text-align: center; font-family: var(--font-mono); font-size: 0.76rem; margin-top: 1.25rem;"><a href="/me/poems">← All poems</a> · <a href="/me">Me</a></p>
+  </div>
+</Base>
+
+<style>
+  .poem-binder-wrap {
+    background: transparent;
+    padding: 1.25rem 0 2.5rem;
+    overflow-x: clip;
+  }
+  .binder {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+  .spread {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    position: relative;
+  }
+  .spread--single {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .spread--single .page {
+    max-width: 520px;
+    width: 100%;
+  }
+  .page {
+    position: relative;
+    background-color: #fdf6e3;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse at 20% 15%, rgba(120,90,40,0.06) 0, transparent 55%),
+      radial-gradient(ellipse at 85% 85%, rgba(120,90,40,0.05) 0, transparent 50%);
+    border: 1px solid #e6d9b8;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.13), 0 1px 4px rgba(0,0,0,0.08), inset 0 0 40px rgba(180,160,110,0.08);
+    padding: 34px 18px 18px 24px;
+    min-height: 560px;
+    max-height: 560px;
+    overflow: hidden;
+    box-sizing: border-box;
+    transform-origin: center center;
+  }
+  .page--left { transform: rotate(-0.8deg); }
+  .page--right { transform: rotate(0.7deg); }
+  .spread:nth-child(even) .page--left { transform: rotate(0.6deg); }
+  .spread:nth-child(even) .page--right { transform: rotate(-0.75deg); }
+  .page-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    padding-top: 6px;
+  }
+  .poem-title {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.45rem;
+    line-height: 32px;
+    margin: 0 0 8px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .poem-desc {
+    font-family: "EB Garamond", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.98rem;
+    line-height: 24px;
+    color: #5a5a5a;
+    margin: 0;
+  }
+  .poem-date {
+    margin-top: 0.5rem;
+  }
+  .page-rule {
+    border: none;
+    border-top: 1px solid #d9c9b0;
+    margin: 10px 0 0;
+  }
+  .page-lines {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-weight: 500;
+    font-size: 0.98rem;
+    line-height: 22px;
+    color: #1e1e1e;
+    letter-spacing: 0.014em;
+    padding-top: 2px;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+  .line {
+    min-height: 22px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+  }
+  @media (max-width: 900px) {
+    .spread { grid-template-columns: 1fr; gap: 1.25rem; }
+    .page, .page--left, .page--right, .spread:nth-child(even) .page--left, .spread:nth-child(even) .page--right { transform: none; }
+    .page { min-height: 560px; max-height: 560px; padding: 28px 16px 16px 20px; }
+  }
+</style>

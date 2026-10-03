@@ -1,0 +1,20 @@
+[
+  {
+    "title": "The Count of Monte Cristo",
+    "kind": "Show",
+    "year": 2024,
+    "tags": ["shows", "favorites"]
+  },
+  {
+    "title": "Silo",
+    "kind": "Show",
+    "year": 2023,
+    "tags": ["shows", "favorites"]
+  },
+  {
+    "title": "Nanpakal Nerathu Mayakkam",
+    "kind": "Film",
+    "year": 2022,
+    "tags": ["films", "favorites"]
+  }
+]

@@ -1,0 +1,27 @@
+---
+import Base from "../../../layouts/Base.astro";
+import Card from "../../../components/Card.astro";
+import articlesData from "../../../data/articles.json";
+
+type Article = { title: string; description?: string; date: string; link: string; source?: string; tags?: string[] };
+const entries = (articlesData as Article[]).sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+const fmt = (d: string) => new Date(d).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+---
+
+<Base title="Articles — Me — Sagar" description="Articles — single page, cards link directly to URL.">
+  <div class="container" style="padding: 2rem 1.25rem;">
+    <p class="meta" style="margin-bottom: 0.5rem;"><a href="/me">Me</a> / Articles</p>
+    <h1 style="margin-bottom: 0.5rem;">Articles</h1>
+    <p style="color: var(--text-muted); max-width: 60ch; margin-bottom: 1.5rem;">Ramblings of mind - just formatted better.</p>
+    <hr class="divider" />
+    {entries.length === 0 ? (
+      <p style="color: var(--text-muted); border: 1px dashed var(--border); padding: 1.25rem; text-align: center;">No articles yet — add to <code>src/data/articles.json</code></p>
+    ) : (
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+        {entries.map((e) => (
+          <Card href={e.link} title={e.title} description={e.description} meta={`${fmt(e.date)} · ↗ ${e.source ?? new URL(e.link).hostname}`} tags={e.tags} />
+        ))}
+      </div>
+    )}
+  </div>
+</Base>

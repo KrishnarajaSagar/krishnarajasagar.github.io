@@ -1,0 +1,19 @@
+---
+interface Props {
+  kicker?: string;
+  title: string;
+  description?: string;
+  href?: string;
+  hrefLabel?: string;
+}
+const { kicker, title, description, href, hrefLabel } = Astro.props;
+---
+
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+  <div>
+    {kicker && <p class="meta" style="margin-bottom: 0.25rem;">{kicker}</p>}
+    <h2 style="margin: 0;">{title}</h2>
+    {description && <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.35rem; max-width: 55ch;">{description}</p>}
+  </div>
+  {href && <a href={href} style="font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase;">{hrefLabel ?? "View all →"}</a>}
+</div>

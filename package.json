@@ -1,0 +1,30 @@
+{
+  "name": "krishnarajasagar.github.io",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KrishnarajaSagar/krishnarajasagar.github.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KrishnarajaSagar/krishnarajasagar.github.io/issues"
+  },
+  "homepage": "https://github.com/KrishnarajaSagar/krishnarajasagar.github.io#readme",
+  "dependencies": {
+    "astro": "^7.3.5"
+  }
+}

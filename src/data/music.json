@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Portal",
+    "artist": "Balu Brigada",
+    "year": 2025,
+    "cover": "/images/music/portal.jpg",
+    "tags": ["music", "listening"]
+  },
+  {
+    "title": "Nocturne",
+    "artist": "Wasia Project",
+    "year": 2026,
+    "cover": "/images/music/nocturne.jpg",
+    "tags": ["music", "listening"]
+  },
+  {
+    "title": "LUX",
+    "artist": "Rosalía",
+    "year": 2025,
+    "cover": "/images/music/lux.webp",
+    "tags": ["music", "listening"]
+  }
+]

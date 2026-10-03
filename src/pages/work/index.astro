@@ -1,0 +1,154 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection, render } from "astro:content";
+
+const fmtShort = (d: Date) => d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+const fmtLong = (d: Date) => d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+const fmtRangeShort = (s: Date, e?: Date | string) => {
+  const start = fmtShort(s);
+  if (!e) return start;
+  if (typeof e === "string") return `${start} – ${e}`;
+  return `${start} – ${fmtShort(e)}`;
+};
+const fmtRangeLong = (s: Date, e?: Date | string) => {
+  const start = fmtLong(s);
+  if (!e) return start;
+  if (typeof e === "string") return `${start} – ${e}`;
+  return `${start} – ${fmtLong(e)}`;
+};
+const sortKey = (e: any) => e.data.endDate === "Present" ? Infinity : (e.data.endDate instanceof Date ? e.data.endDate.valueOf() : e.data.date.valueOf());
+const entries = (await getCollection("work", ({data})=> data.status!=="draft")).sort((a,b)=> {
+  const ak = sortKey(a), bk = sortKey(b);
+  if (bk !== ak) return bk - ak;
+  return b.data.date.valueOf() - a.data.date.valueOf();
+});
+
+// Prepare entries with rendered Content for single-page editorial
+const entriesWithContent = await Promise.all(entries.map(async (e) => {
+  const { Content } = await render(e);
+  return { entry: e, Content };
+}));
+
+const deloitte = entriesWithContent[0];
+const interns = entriesWithContent.slice(1);
+---
+
+<Base title="Work — Sagar" description="Professional work and experience.">
+  <div class="container" style="padding: 2rem 1.25rem;">
+    <h1 style="margin: 0.5rem 0;">Work</h1>
+    <p style="color: var(--text-muted); max-width: 65ch; margin-bottom: 1.5rem;">Professional experience in software engineering — full-time and internship roles focused on application modernization, data, and product development.</p>
+    <hr class="divider" />
+
+    {entriesWithContent.length===0 ? (
+      <div style="border: 1px solid var(--border); background: var(--bg-subtle); padding: 1.5rem;">
+        <p style="font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.4rem;">Work section is scaffolded.</p>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">Add Markdown files to <code>src/content/work/*.md</code> with frontmatter <code>title, date, endDate, role, employer, description, tech</code>. They will appear here automatically without code changes.</p>
+      </div>
+    ) : (
+      <>
+        {/* Featured — current role — with split timeline on right — aligned with internships 160px */}
+        {deloitte && (
+          <section style="display: grid; grid-template-columns: 1fr 185px; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+            <div style="min-width: 0;">
+              <h3 style="font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.2rem;">{deloitte.entry.data.title}</h3>
+              <p style="font-family: var(--font-serif); font-size: 0.92rem; color: var(--text-muted); margin: 0 0 0.7rem;">{deloitte.entry.data.employer}</p>
+              {deloitte.entry.data.tech && (
+                <p style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.85rem;">
+                  {deloitte.entry.data.tech.map((t: string) => (
+                    <span style="font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.05em; text-transform: uppercase; background: var(--bg-subtle); border: 1px solid var(--border); padding: 0.15rem 0.35rem; color: var(--text-muted);">{t}</span>
+                  ))}
+                </p>
+              )}
+              <div class="prose prose--compact deloitte-detail" style="font-size: 0.92rem; max-width: none;">
+                <deloitte.Content />
+              </div>
+            </div>
+            <div style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
+              <p class="meta" style="margin: 0; white-space: nowrap; font-size: 0.72rem;">{fmtRangeShort(deloitte.entry.data.date, (deloitte.entry.data as any).endDate)}</p>
+                  <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0; white-space: nowrap;">
+                {(() => {
+                  const s = deloitte.entry.data.date as Date;
+                  const e = (deloitte.entry.data as any).endDate as Date | string | undefined;
+                  const end = e instanceof Date ? e : e ? new Date() : s;
+                  const months = (end.getFullYear() - s.getFullYear()) * 12 + (end.getMonth() - s.getMonth()) + 1;
+                  const y = Math.floor(months / 12);
+                  const m = months % 12;
+                  if (y > 0) return `${y} yr${y>1?"s":""}${m?` ${m} mo`:""}`;
+                  return `${m} mo${m>1?"s":""}`;
+                })()}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* Internships — editorial list with dates right-aligned */}
+        {interns.length > 0 && (
+          <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+            {interns.map(({ entry, Content }) => (
+              <section style="display: grid; grid-template-columns: 1fr 185px; gap: 1.25rem; align-items: start; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+                <div style="min-width: 0;">
+                  <h3 style="font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.2rem;">{entry.data.title}</h3>
+                  <p style="font-family: var(--font-serif); font-size: 0.92rem; color: var(--text-muted); margin: 0 0 0.7rem;">{entry.data.employer}</p>
+                  {entry.data.tech && (
+                    <p style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.85rem;">
+                      {entry.data.tech.map((t: string) => (
+                        <span style="font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.05em; text-transform: uppercase; background: var(--bg-subtle); border: 1px solid var(--border); padding: 0.15rem 0.35rem; color: var(--text-muted);">{t}</span>
+                      ))}
+                    </p>
+                  )}
+                  <div class="prose prose--compact" style="font-size: 0.92rem;">
+                    <Content />
+                  </div>
+                </div>
+                <div style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
+                  <p class="meta" style="margin: 0; font-size: 0.72rem; line-height: 1.35;">{fmtRangeLong(entry.data.date, (entry.data as any).endDate)}</p>
+                  <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0;">
+                    {(() => {
+                      const s = entry.data.date as Date;
+                      const e = (entry.data as any).endDate as Date | string | undefined;
+                      const end = e instanceof Date ? e : e ? new Date() : s;
+                      const months = (end.getFullYear() - s.getFullYear()) * 12 + (end.getMonth() - s.getMonth()) + 1;
+                      const y = Math.floor(months / 12);
+                      const m = months % 12;
+                      if (y > 0) return `${y} yr${y>1?"s":""}${m?` ${m} mo`:""}`;
+                      return `${m} mo${m>1?"s":""}`;
+                    })()}
+                  </p>
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+      </>
+    )}
+  </div>
+</Base>
+
+<style>
+  .work-detail :global(h2) {
+    font-size: 1.15rem;
+    margin-top: 1.6rem;
+    margin-bottom: 0.6rem;
+    border-left: 3px solid var(--border-strong);
+    padding-left: 0.75rem;
+  }
+  .work-detail :global(ul) {
+    margin: 0.6rem 0 1rem 1.15rem;
+  }
+  .work-detail :global(li) {
+    margin-bottom: 0.35rem;
+    line-height: 1.6;
+  }
+  .prose--compact :global(h2) { font-size: 1rem; margin-top: 0; }
+  .prose--compact :global(ul) { margin-left: 1rem; }
+  .deloitte-detail :global(h2) {
+    font-size: 1rem;
+    margin-top: 1.4rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--border-strong);
+    padding-left: 0.75rem;
+  }
+  @media (max-width: 640px) {
+    .work-detail :global(h2) { font-size: 1.05rem; }
+  }
+</style>

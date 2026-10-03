@@ -1,0 +1,201 @@
+---
+const pathname = Astro.url.pathname;
+const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/") || (href === "/me" && pathname === "/");
+---
+
+<header style="border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(253,252,250,0.92); backdrop-filter: blur(8px); z-index: 10;">
+  <div class="container" style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; gap: 1rem;">
+    <a href="/me" class="brand" aria-label="Krishnaraja Sagar">
+      <span class="brand__stack">
+        <span class="brand__text">KRISHNARAJA SAGAR</span>
+        <span class="brand__phonetic" aria-hidden="true">/krɪʃnəˌrɑːdʒə ˈsɑːɡər/</span>
+      </span>
+    </a>
+    <nav aria-label="Primary" style="display: flex; gap: 1.25rem; align-items: center;">
+      <a href="/me" aria-current={isActive("/me") ? "page" : undefined} style={`font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: ${isActive("/me") ? "var(--text)" : "var(--text-muted)"}; text-decoration: none; border-bottom: ${isActive("/me") ? "1px solid var(--text)" : "1px solid transparent"}; padding-bottom: 2px;`}>Me</a>
+      <a href="/life" aria-current={isActive("/life") ? "page" : undefined} style={`font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: ${isActive("/life") ? "var(--text)" : "var(--text-muted)"}; text-decoration: none; border-bottom: ${isActive("/life") ? "1px solid var(--text)" : "1px solid transparent"}; padding-bottom: 2px;`}>Life</a>
+      <a href="/work" aria-current={isActive("/work") ? "page" : undefined} style={`font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: ${isActive("/work") ? "var(--text)" : "var(--text-muted)"}; text-decoration: none; border-bottom: ${isActive("/work") ? "1px solid var(--text)" : "1px solid transparent"}; padding-bottom: 2px;`}>Work</a>
+    </nav>
+  </div>
+</header>
+
+<script is:inline>
+  (() => {
+    const brand = document.querySelector(".brand");
+    if (!brand) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (location.pathname.startsWith("/work")) return;
+    const stack = brand.querySelector(".brand__stack");
+    const text = brand.querySelector(".brand__text");
+    const phonetic = brand.querySelector(".brand__phonetic");
+    if (!stack || !text || !phonetic) return;
+
+    // Lock width to prevent layout shift
+    const lockWidth = () => {
+      const w = Math.max(text.offsetWidth, phonetic.offsetWidth);
+      stack.style.minWidth = w + "px";
+    };
+    lockWidth();
+    window.addEventListener("resize", lockWidth);
+
+    let glitching = false;
+    let timeout;
+    let holdTimeout;
+    let backTimeout;
+    const trigger = () => {
+      if (glitching) return;
+      if (document.hidden) return;
+      glitching = true;
+      brand.classList.add("glitching");
+      brand.classList.add("show-phonetic");
+      // 1s glitch to phonetic
+      timeout = setTimeout(() => {
+        brand.classList.remove("glitching");
+      }, 1000);
+      // hold 1.2s, then glitch back to original
+      holdTimeout = setTimeout(() => {
+        brand.classList.add("glitching-back");
+        backTimeout = setTimeout(() => {
+          brand.classList.remove("glitching-back");
+          brand.classList.remove("show-phonetic");
+          glitching = false;
+          schedule();
+        }, 1000);
+      }, 2200);
+    };
+    const schedule = () => {
+      const delay = 3000 + Math.random() * 2000; // 3-5s
+      setTimeout(trigger, delay);
+    };
+    schedule();
+
+    // Hover trigger
+    brand.addEventListener("mouseenter", () => {
+      if (glitching) return;
+      clearTimeout(timeout);
+      clearTimeout(holdTimeout);
+      clearTimeout(backTimeout);
+      trigger();
+    });
+    brand.addEventListener("mouseleave", () => {
+      // let current glitch finish, then reschedule
+    });
+    brand.addEventListener("focusin", trigger);
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && !glitching) schedule();
+    });
+  })();
+</script>
+
+<style>
+  .brand {
+    display: inline-block;
+    text-decoration: none;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .brand__stack {
+    display: inline-grid;
+    vertical-align: middle;
+  }
+  .brand__text,
+  .brand__phonetic {
+    grid-area: 1 / 1;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    line-height: 1;
+    transition: opacity 0.08s;
+  }
+  .brand__phonetic {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+    opacity: 0;
+    color: var(--text);
+  }
+  /* Phonetic visible during glitch + hold (2-3s total) */
+  .brand.show-phonetic .brand__text {
+    opacity: 0;
+  }
+  .brand.show-phonetic .brand__phonetic {
+    opacity: 1;
+  }
+  /* Tone down: keep glitch text hidden while phonetic shown */
+  .brand.glitching .brand__text {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .brand.glitching .brand__text {
+      animation: glitchText 1s steps(2, end) forwards;
+    }
+    .brand.glitching .brand__phonetic {
+      animation: glitchPhonetic 1s steps(2, end) forwards;
+    }
+    .brand.glitching-back .brand__text {
+      animation: glitchTextBack 1s steps(2, end) forwards;
+    }
+    .brand.glitching-back .brand__phonetic {
+      animation: glitchPhoneticBack 1s steps(2, end) forwards;
+    }
+  }
+
+  @keyframes glitchText {
+    0% { transform: translate(0); text-shadow: none; opacity: 1; }
+    8% { transform: translate(-1.2px, 0.3px); text-shadow: 1.2px 0 #ff3b30, -1.2px 0 #007aff; opacity: 0.9; }
+    12% { transform: translate(1.4px, -0.3px); text-shadow: -1.2px 0 #ff3b30, 1.2px 0 #007aff; }
+    18% { transform: translate(-0.8px, 0); opacity: 0; }
+    22% { transform: translate(1px, 0.2px); text-shadow: 1px 0 #ff3b30, -1px 0 #007aff; opacity: 1; }
+    30% { transform: translate(-1px, -0.2px); clip-path: inset(0 0 45% 0); }
+    36% { transform: translate(1.1px, 0); clip-path: inset(55% 0 0 0); }
+    42% { opacity: 0; }
+    48% { opacity: 1; transform: translate(0); text-shadow: none; clip-path: none; }
+    100% { opacity: 0; }
+  }
+
+  @keyframes glitchPhonetic {
+    0% { transform: translate(0); text-shadow: none; opacity: 0; }
+    10% { opacity: 1; transform: translate(1.1px, 0); text-shadow: -1.3px 0 #ff3b30, 1.3px 0 #007aff; }
+    16% { transform: translate(-1.3px, 0.2px); text-shadow: 1.2px 0 #007aff, -1.2px 0 #ff3b30; }
+    24% { transform: translate(0.9px, -0.2px); clip-path: inset(0 0 50% 0); }
+    32% { transform: translate(-1px, 0); clip-path: inset(40% 0 0 0); }
+    40% { text-shadow: 1.3px 0 #ff3b30, -1.3px 0 #007aff; }
+    50% { opacity: 1; }
+    88% { opacity: 1; transform: translate(0); text-shadow: 1.3px 0 #ff3b30, -1.3px 0 #007aff; }
+    100% { opacity: 0; transform: translate(0); text-shadow: none; }
+  }
+
+  @keyframes glitchTextBack {
+    0% { transform: translate(0); text-shadow: none; opacity: 0; }
+    12% { opacity: 1; transform: translate(-1.1px, 0.2px); text-shadow: 1.3px 0 #007aff, -1.3px 0 #ff3b30; }
+    20% { transform: translate(1.2px, -0.2px); text-shadow: -1.3px 0 #ff3b30, 1.3px 0 #007aff; clip-path: inset(45% 0 0 0); }
+    30% { transform: translate(-1px, 0); clip-path: inset(0 0 45% 0); }
+    42% { opacity: 1; transform: translate(1px, 0); text-shadow: 1.2px 0 #ff3b30, -1.2px 0 #007aff; }
+    100% { opacity: 1; transform: translate(0); text-shadow: none; }
+  }
+
+  @keyframes glitchPhoneticBack {
+    0% { opacity: 1; transform: translate(0); text-shadow: 1.3px 0 #ff3b30, -1.3px 0 #007aff; }
+    12% { transform: translate(1.3px, 0.2px); text-shadow: -1.2px 0 #007aff, 1.2px 0 #ff3b30; }
+    22% { transform: translate(-1.2px, -0.3px); clip-path: inset(50% 0 0 0); }
+    34% { transform: translate(1px, 0); clip-path: inset(0 0 50% 0); opacity: 1; }
+    48% { opacity: 0; transform: translate(-1.1px, 0); text-shadow: -1.3px 0 #ff3b30, 1.3px 0 #007aff; }
+    100% { opacity: 0; transform: translate(0); text-shadow: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand__phonetic { display: none !important; }
+    .brand.glitching .brand__text { opacity: 1 !important; animation: none !important; }
+  }
+
+  @media (max-width: 480px) {
+    header div { gap: 0.75rem; }
+    .brand__text { font-size: 0.96rem; }
+    .brand__phonetic { font-size: 0.84rem; }
+  }
+</style>
