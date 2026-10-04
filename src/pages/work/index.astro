@@ -1,6 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { getCollection, render } from "astro:content";
+import socialLinks from "../../data/social.json";
 
 const fmtShort = (d: Date) => d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 const fmtLong = (d: Date) => d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
@@ -36,8 +37,16 @@ const interns = entriesWithContent.slice(1);
 <Base title="Work — Sagar" description="Professional work and experience.">
   <div class="container" style="padding: 2rem 1.25rem;">
     <h1 style="margin: 0.5rem 0;">Work</h1>
-    <p style="color: var(--text-muted); max-width: 65ch; margin-bottom: 1.5rem;">Professional experience in software engineering — full-time and internship roles focused on application modernization, data, and product development.</p>
-    <hr class="divider" />
+    <p style="color: var(--text-muted); max-width: 65ch; margin-bottom: 0.75rem;">Professional experience in software engineering — full-time and internship roles focused on application modernization, data, and product development.</p>
+    <p class="meta" style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin: 0 0 1.5rem; text-transform: none; letter-spacing: 0.02em;">
+      {(socialLinks as any[]).filter((s: any) => s.label !== "Substack").map((s: any, i: number, arr: any[]) => (
+        <>
+          <a href={s.href} target="_blank" rel="noopener" style="color: var(--text-muted)">{s.label}</a>
+          {i < arr.length - 1 && <span style="margin: 0 0.35rem; color: var(--text-faint);">·</span>}
+        </>
+      ))}
+    </p>
+    <hr class="divider" style="margin-top: 0;" />
 
     {entriesWithContent.length===0 ? (
       <div style="border: 1px solid var(--border); background: var(--bg-subtle); padding: 1.5rem;">
@@ -46,10 +55,10 @@ const interns = entriesWithContent.slice(1);
       </div>
     ) : (
       <>
-        {/* Featured — current role — with split timeline on right — aligned with internships 160px */}
+        {/* Featured — current role — with split timeline on right — stacked date above on mobile */}
         {deloitte && (
-          <section style="display: grid; grid-template-columns: 1fr 185px; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
-            <div style="min-width: 0;">
+          <section class="work-row" style="display: grid; grid-template-columns: 1fr 200px; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+            <div class="work-body" style="min-width: 0;">
               <h3 style="font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.2rem;">{deloitte.entry.data.title}</h3>
               <p style="font-family: var(--font-serif); font-size: 0.92rem; color: var(--text-muted); margin: 0 0 0.7rem;">{deloitte.entry.data.employer}</p>
               {deloitte.entry.data.tech && (
@@ -63,9 +72,9 @@ const interns = entriesWithContent.slice(1);
                 <deloitte.Content />
               </div>
             </div>
-            <div style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
+            <div class="work-date" style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
               <p class="meta" style="margin: 0; white-space: nowrap; font-size: 0.72rem;">{fmtRangeShort(deloitte.entry.data.date, (deloitte.entry.data as any).endDate)}</p>
-                  <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0; white-space: nowrap;">
+                  <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0; white-space: nowrap;" class="work-duration">
                 {(() => {
                   const s = deloitte.entry.data.date as Date;
                   const e = (deloitte.entry.data as any).endDate as Date | string | undefined;
@@ -81,12 +90,12 @@ const interns = entriesWithContent.slice(1);
           </section>
         )}
 
-        {/* Internships — editorial list with dates right-aligned */}
+        {/* Internships — editorial list with dates right-aligned (stacked above on mobile) */}
         {interns.length > 0 && (
-          <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+          <div class="work-list" style="display: flex; flex-direction: column; gap: 1.75rem;">
             {interns.map(({ entry, Content }) => (
-              <section style="display: grid; grid-template-columns: 1fr 185px; gap: 1.25rem; align-items: start; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
-                <div style="min-width: 0;">
+              <section class="work-row" style="display: grid; grid-template-columns: 1fr 200px; gap: 1.25rem; align-items: start; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+                <div class="work-body" style="min-width: 0;">
                   <h3 style="font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.2rem;">{entry.data.title}</h3>
                   <p style="font-family: var(--font-serif); font-size: 0.92rem; color: var(--text-muted); margin: 0 0 0.7rem;">{entry.data.employer}</p>
                   {entry.data.tech && (
@@ -100,8 +109,8 @@ const interns = entriesWithContent.slice(1);
                     <Content />
                   </div>
                 </div>
-                <div style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
-                  <p class="meta" style="margin: 0; font-size: 0.72rem; line-height: 1.35;">{fmtRangeLong(entry.data.date, (entry.data as any).endDate)}</p>
+                <div class="work-date" style="text-align: right; align-self: start; padding-top: 0.2rem; min-width: 0;">
+                  <p class="meta work-date-text" style="margin: 0; font-size: 0.72rem; line-height: 1.35; white-space: nowrap;">{fmtRangeShort(entry.data.date, (entry.data as any).endDate)}</p>
                   <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin: 0.25rem 0 0;">
                     {(() => {
                       const s = entry.data.date as Date;
@@ -119,6 +128,13 @@ const interns = entriesWithContent.slice(1);
             ))}
           </div>
         )}
+        {/* Professional nudge to personal side */}
+        <aside style="margin-top: 2rem; border: 1px solid var(--border); background: var(--bg-subtle); padding: 1.25rem 1.25rem 1.1rem;">
+          <p class="meta" style="margin-bottom: 0.4rem;">Beyond the résumé</p>
+          <p style="font-family: var(--font-serif); font-size: 1.05rem; line-height: 1.6; margin: 0; max-width: 60ch;">
+            Work is one part of the picture — what I make, watch, read, and think about lives in <a href="/life">Life</a> and <a href="/me">Me</a>.
+          </p>
+        </aside>
       </>
     )}
   </div>
@@ -150,5 +166,35 @@ const interns = entriesWithContent.slice(1);
   }
   @media (max-width: 640px) {
     .work-detail :global(h2) { font-size: 1.05rem; }
+    /* Stack date above title on small screens — removes the narrow 185px
+       right column that starved content and left huge gaps between periods. */
+    .work-row {
+      grid-template-columns: 1fr !important;
+      gap: 0.5rem !important;
+      padding-bottom: 1.25rem !important;
+      margin-bottom: 1.25rem !important;
+    }
+    .work-date {
+      order: -1;
+      text-align: left !important;
+      padding-top: 0 !important;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.35rem 0.6rem;
+    }
+    .work-date .meta,
+    .work-date-text {
+      white-space: normal !important;
+      line-height: 1.4 !important;
+    }
+    .work-date .work-duration,
+    .work-date p:last-child {
+      white-space: normal !important;
+      margin: 0 !important;
+    }
+    .work-list {
+      gap: 1.25rem !important;
+    }
   }
 </style>

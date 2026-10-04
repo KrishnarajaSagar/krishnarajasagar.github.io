@@ -35,7 +35,7 @@ const yOffset = (i: number) => {
         <!-- Title as central sticky -->
         <div class="note note--title">
           <h1 class="note-title" style="font-size: 1.6rem; line-height: 1.15;">Thoughts</h1>
-          <p class="note-desc" style="font-size: 0.95rem; color: #3a3a3a;">Pieces of mind disguised as sticky notes.</p>
+          <p class="note-desc" style="font-size: 0.95rem;">Pieces of mind disguised as sticky notes.</p>
           <p class="meta" style="margin-top: 0.5rem; font-size: 0.68rem;">Me / Thoughts · {thoughts.length} {thoughts.length === 1 ? "note" : "notes"}</p>
         </div>
 
@@ -53,7 +53,7 @@ const yOffset = (i: number) => {
       </div>
 
       {thoughts.length === 0 && (
-        <p style="color: #5a4a33; background: rgba(255,255,255,0.7); border: 1px dashed #8b7a5a; padding: 1.25rem; max-width: 500px; margin: 2rem auto;">No thoughts yet — edit <code>src/data/thoughts.json</code> (single file for all notes) — fields: title, description, date, featured, color 1…4</p>
+        <p style="color: var(--text-muted); background: var(--card-bg); border: 1px dashed var(--border-strong); padding: 1.25rem; max-width: 500px; margin: 2rem auto;">No thoughts yet — edit <code>src/data/thoughts.json</code> (single file for all notes) — fields: title, description, date, featured, color 1…4</p>
       )}
     </div>
   </div>
@@ -62,17 +62,17 @@ const yOffset = (i: number) => {
 <style>
   /* Whole-page clipboard: override body + make header translucent (keep header) */
   :global(body.thoughts-clipboard) {
-    background: #d6c7a8;
+    background: var(--board-bg);
   }
   :global(body.thoughts-clipboard header) {
-    background: rgba(253, 252, 250, 0.58) !important;
+    background: var(--header-bg) !important;
     backdrop-filter: blur(8px) saturate(1.15);
-    border-bottom-color: rgba(0,0,0,0.09) !important;
+    border-bottom-color: var(--border) !important;
   }
   :global(body.thoughts-clipboard footer) {
-    background: rgba(253, 252, 250, 0.72);
+    background: var(--bg);
     margin-top: 0 !important;
-    border-top: 1px solid rgba(0,0,0,0.08);
+    border-top: 1px solid var(--border);
   }
   :global(body.thoughts-clipboard main) {
     padding: 0;
@@ -82,7 +82,7 @@ const yOffset = (i: number) => {
     position: relative;
     min-height: 100dvh;
     /* HQ clipboard paper: base + wood grain + subtle ruled lines + noise */
-    background-color: #d8c9a8;
+    background-color: var(--board-bg);
     background-image:
       /* subtle paper noise */
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"),
@@ -134,7 +134,7 @@ const yOffset = (i: number) => {
     justify-self: center;
     min-height: 150px;
     padding: 1.5rem 1.4rem 1.2rem;
-    background: #fffef0 !important;
+    background: var(--board-note-bg) !important;
     border: 1px solid rgba(0,0,0,.1);
     box-shadow: 3px 6px 16px rgba(0,0,0,.16), 0 2px 4px rgba(0,0,0,.1);
     transform: rotate(0.5deg) !important;
@@ -150,9 +150,13 @@ const yOffset = (i: number) => {
   .note-desc {
     font-size: 0.9rem;
     line-height: 1.55;
-    color: #2b2b2b;
+    color: var(--board-text);
     margin: 0;
   }
+  /* Pastel stickies stay light in both themes (pinned notes on board);
+     keep dark ink on them for legibility */
+  .note:not(.note--title) .note-title,
+  .note:not(.note--title) .note-desc { color: #2b2b2b; }
   .note:hover { transform: rotate(0deg) translateY(0px) scale(1.02) !important; box-shadow: 4px 8px 18px rgba(0,0,0,.2); z-index: 3; }
 
   /* pin dot */

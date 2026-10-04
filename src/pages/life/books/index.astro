@@ -10,8 +10,8 @@ import booksData from "../../../data/books.json";
     <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Portals to unknown worlds.</p>
     <hr class="divider" />
     {booksData.length===0 ? <p style="color: var(--text-muted);">No books yet — add to <code>src/data/books.json</code></p> : (
-      <div style="border: 1px solid var(--border);">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.92rem;">
+      <div class="table-scroll" style="border: 1px solid var(--border); overflow-x: auto;">
+        <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 560px;">
           <thead>
             <tr style="text-align: left; border-bottom: 1px solid var(--border-strong); background: var(--bg-subtle);">
               <th style="padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;">Title</th>
@@ -36,3 +36,10 @@ import booksData from "../../../data/books.json";
     <p style="font-family: var(--font-mono); font-size: 0.78rem; margin-top: 1rem;"><a href="/life">← Life hub</a></p>
   </div>
 </Base>
+
+<style>
+  @media (max-width: 560px) {
+    .data-table th:last-child, .data-table td:last-child { display: none; }
+    .data-table { min-width: 0; }
+  }
+</style>

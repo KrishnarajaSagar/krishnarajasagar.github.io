@@ -18,7 +18,7 @@ const linkTarget = target ?? (isExternal ? "_blank" : undefined);
 const linkRel = rel ?? (isExternal ? "noopener" : undefined);
 ---
 
-<div style="display: flex; flex-direction: column; border: 1px solid var(--border); background: white; transition: border-color 0.15s; min-height: 192px; position: relative; overflow: hidden;">
+<div class="card" style="display: flex; flex-direction: column; border: 1px solid var(--border); background: var(--card-bg); transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; min-height: 192px; position: relative; overflow: hidden;">
   <a href={href} target={linkTarget} rel={linkRel} style="display: flex; flex-direction: column; flex: 1; padding: 1.35rem 1.2rem 0.6rem 1.2rem; text-decoration: none; color: inherit;">
   {(meta || icon) && (
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.4rem;">
@@ -41,8 +41,8 @@ const linkRel = rel ?? (isExternal ? "noopener" : undefined);
       )}
     </div>
   )}
-  <h3 style="font-family: var(--font-serif); font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text);">{title}</h3>
-  {description && <p style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; flex: 1;">{description}</p>}
+  <h3 style="font-family: var(--font-serif); font-size: 1.05rem; line-height: 1.3; margin-bottom: 0.35rem; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2; overflow: hidden; text-overflow: ellipsis; overflow-wrap: break-word; max-height: 2.6em;">{title}</h3>
+  {description && <p class="card-desc" style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3; overflow: hidden; text-overflow: ellipsis; overflow-wrap: break-word; max-height: 4.5em;">{description}</p>}
   {(tags && tags.length > 0 || footer) && (
     <div style="margin-top: 0.6rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
       {tags && tags.length > 0 ? (
@@ -62,8 +62,17 @@ const linkRel = rel ?? (isExternal ? "noopener" : undefined);
 </div>
 
 <style>
-  div:hover { border-color: var(--border-strong); }
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 6px 18px rgba(46, 80, 121, 0.14);
+  }
+  :global([data-theme="dark"]) .card:hover {
+    box-shadow: 0 0 0 1px var(--accent), 0 6px 18px rgba(216, 179, 106, 0.18);
+  }
   a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+  }
   .card-icon {
     width: 22px;
     height: 22px;

@@ -190,12 +190,12 @@ if (spreads.length === 0) spreads.push({ left: [], right: [] });
   }
   .page {
     position: relative;
-    background-color: #fdf6e3;
+    background-color: var(--paper-bg);
     background-image:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
       radial-gradient(ellipse at 20% 15%, rgba(120,90,40,0.06) 0, transparent 55%),
       radial-gradient(ellipse at 85% 85%, rgba(120,90,40,0.05) 0, transparent 50%);
-    border: 1px solid #e6d9b8;
+    border: 1px solid var(--paper-border);
     border-radius: 6px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.13), 0 1px 4px rgba(0,0,0,0.08), inset 0 0 40px rgba(180,160,110,0.08);
     padding: 34px 18px 18px 24px;
@@ -230,7 +230,7 @@ if (spreads.length === 0) spreads.push({ left: [], right: [] });
     font-weight: 400;
     font-size: 0.98rem;
     line-height: 24px;
-    color: #5a5a5a;
+    color: var(--paper-muted);
     margin: 0;
   }
   .poem-date {
@@ -238,7 +238,7 @@ if (spreads.length === 0) spreads.push({ left: [], right: [] });
   }
   .page-rule {
     border: none;
-    border-top: 1px solid #d9c9b0;
+    border-top: 1px solid var(--paper-rule);
     margin: 10px 0 0;
   }
   .page-lines {
@@ -246,7 +246,7 @@ if (spreads.length === 0) spreads.push({ left: [], right: [] });
     font-weight: 500;
     font-size: 0.98rem;
     line-height: 22px;
-    color: #1e1e1e;
+    color: var(--paper-text);
     letter-spacing: 0.014em;
     padding-top: 2px;
     overflow-wrap: anywhere;
@@ -262,6 +262,9 @@ if (spreads.length === 0) spreads.push({ left: [], right: [] });
   @media (max-width: 900px) {
     .spread { grid-template-columns: 1fr; gap: 1.25rem; }
     .page, .page--left, .page--right, .spread:nth-child(even) .page--left, .spread:nth-child(even) .page--right { transform: none; }
-    .page { min-height: 560px; max-height: 560px; padding: 28px 16px 16px 20px; }
+    /* Let pages grow naturally on small screens — fixed 560px + overflow:hidden
+       caused mid-line cuts (half-visible line below ellipsis) when the header
+       wraps taller. Full lines only, no clipped continuity. */
+    .page { min-height: auto; max-height: none; overflow: visible; padding: 28px 16px 20px 20px; }
   }
 </style>

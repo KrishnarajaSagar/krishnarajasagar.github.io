@@ -135,7 +135,7 @@ const sorted = [...musicData].sort((a: any, b: any) => b.year - a.year);
     overflow-x: auto;
     overflow-y: hidden;
     height: 100dvh;
-    background: #f6f1e6;
+    background: var(--room-bg);
     overscroll-behavior-x: auto;
     overscroll-behavior-y: none;
   }
@@ -179,8 +179,8 @@ const sorted = [...musicData].sort((a: any, b: any) => b.year - a.year);
     aspect-ratio: 1;
     border-radius: 4px;
     overflow: hidden;
-    background: #fdf6e3;
-    border: 1px solid #e6d9b8;
+    background: var(--paper-bg);
+    border: 1px solid var(--paper-border);
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     opacity: 0.38;
     filter: blur(0.9px) grayscale(0.2);
@@ -216,6 +216,11 @@ const sorted = [...musicData].sort((a: any, b: any) => b.year - a.year);
   @media (max-width: 860px) {
     .turntable-frame { width: min(360px, 68vw); }
     .side-cover { flex-basis: 110px; }
+  }
+  @media (max-width: 560px) {
+    .side-cover { display: none; }
+    .turntable-frame { width: min(320px, 84vw); }
+    .stage { gap: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     .side-cover { transition: none; }

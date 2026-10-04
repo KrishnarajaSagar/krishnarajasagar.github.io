@@ -1,0 +1,177 @@
+---
+import Base from "../layouts/Base.astro";
+import Card from "./Card.astro";
+import SectionHeader from "./SectionHeader.astro";
+import { getCollection } from "astro:content";
+import thoughtsData from "../data/thoughts.json";
+
+interface Props {
+  canonicalPath?: string;
+}
+const { canonicalPath } = Astro.props;
+
+// Me homepage content (rendered at both / and /me) — single file for all thoughts at src/data/thoughts.json
+type Thought = { title: string; description?: string; date: string; featured?: boolean; color?: number };
+const thoughts = (thoughtsData as Thought[]).sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+
+const recentThoughts = thoughts.slice(0, 2);
+
+// Articles — single file at src/data/articles.json (projects-like, single page direct to link)
+import articlesData from "../data/articles.json";
+type Article = { title: string; description?: string; date: string; link: string; source?: string; tags?: string[] };
+const articles = (articlesData as Article[]).sort((a,b)=> new Date(b.date).valueOf() - new Date(a.date).valueOf());
+const poems = (await getCollection("poems", ({ data }) => data.status !== "draft")).sort((a,b)=> b.data.date.valueOf() - a.data.date.valueOf());
+const recentArticles = articles.slice(0, 4);
+const recentPoems = poems.slice(0, 4);
+
+// Life preview — 4 dynamic project cards + single-file music/films/books (projects now dynamic from GitHub)
+import musicData from "../data/music.json";
+import filmsData from "../data/films.json";
+import booksData from "../data/books.json";
+import { getGithubRepos } from "../lib/github";
+const ghProjects = await getGithubRepos();
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const lifePreview = [
+  ...(ghProjects.slice(0,1).map((r: any) => ({ href: r.html_url, title: r.name, description: r.description ?? "No description.", meta: `${r.language ?? "—"} · ★${r.stargazers_count}`, tags: ["project", ...r.topics].slice(0,3), icon: "project" as const, secondaryHref: "/life/projects", secondaryLabel: "View all projects →" }))),
+  ...(musicData.slice(0,1).map((m: any) => ({ href: `/life/music#${slugify(m.title)}`, title: m.title, description: String(m.year), meta: m.artist, tags: m.tags, icon: "music" as const }))),
+  ...(filmsData.slice(0,1).map((f: any) => ({ href: "/life/films", title: f.title, description: String(f.year), meta: f.kind, tags: f.tags, icon: "film" as const }))),
+  ...(booksData.slice(0,1).map((b: any) => ({ href: "/life/books", title: b.title, description: String(b.year), meta: b.author, tags: b.tags, icon: "book" as const }))),
+];
+
+const fmt = (d: Date) => d.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+---
+
+<Base title="Sagar — Me" description="Thoughts, principles, and what I'm currently paying attention to." canonicalPath={canonicalPath}>
+  <div class="container" style="padding: 2.5rem 1.25rem 1rem;">
+    <!-- Intro -->
+    <section style="max-width: var(--max-width); margin-bottom: 2.5rem;">
+      <h1 style="margin-bottom: 0.75rem;">A small human corner<br />of the internet.</h1>
+      <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; max-width: 60ch;">
+        I'm Sagar - I build things, listen to a lot of music, watch films closely, and write down what stays with me.
+        <br /><a href="/life">Life</a> is the archive. <a href="/work">Work</a> is professional.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Recently in the archive — moved up to replace Now (Now was redundant) -->
+    {lifePreview.length > 0 && (
+      <section style="margin-bottom: 2.5rem;">
+        <SectionHeader kicker="From Life" title="Recently in the archive" description="Obsessions as of late." href="/life" />
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+          {lifePreview.map((e: any) => (
+            <Card
+              href={e.href}
+              title={e.title}
+              description={e.description}
+              meta={e.meta}
+              footer={e.footer}
+              tags={e.tags}
+              icon={e.icon}
+              secondaryHref={e.secondaryHref}
+              secondaryLabel={e.secondaryLabel}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Recent thoughts — top 2 titles as pull-quotes -->
+    <section style="margin-bottom: 2.5rem;">
+      <SectionHeader kicker="Writing" title="Recent thoughts" description="When neurons fire." href="/me/thoughts" hrefLabel="All thoughts →" />
+      {recentThoughts.length === 0 ? (
+        <p style="color: var(--text-muted); border: 1px dashed var(--border); padding: 1.25rem; text-align: center;">No thoughts yet. Edit <code>src/data/thoughts.json</code> — single file for all stickies (title, description, date, featured, color 1…4).</p>
+      ) : (
+        <div class="thought-quotes">
+          {recentThoughts.map((t) => (
+            <figure class="thought-quote">
+              <span class="thought-quote__mark" aria-hidden="true">&ldquo;</span>
+              <blockquote class="thought-quote__text">{t.title}</blockquote>
+            </figure>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- Poems — separate writing -->
+    <section style="margin-bottom: 2.5rem;">
+      <SectionHeader kicker="Writing" title="Poems" description="Text in a dope arrangement." href="/me/poems" hrefLabel="All poems →" />
+      {recentPoems.length === 0 ? (
+        <p style="color: var(--text-muted); border: 1px dashed var(--border); padding: 1.25rem; text-align: center;">No poems yet. Add a file to <code>src/content/poems/*.md</code>.</p>
+      ) : (
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+          {recentPoems.map((p) => (
+            <Card href={`/me/poems/${p.id}`} title={p.data.title} description={p.data.description} meta={fmt(p.data.date)} tags={p.data.tags} />
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- Principles snippet -->
+    <section style="margin-bottom: 2.5rem; border-left: 2px solid var(--border-strong); padding-left: 1.25rem;">
+      <p class="meta" style="margin-bottom: 0.4rem;">What I stand for</p>
+      <p style="font-family: var(--font-serif); font-size: 1.15rem; line-height: 1.6; max-width: 60ch;">
+        I value human creative expression, and believe that it must never be outsourced. The soul a creative work carries, and the impact it can create is extremely powerful.
+      </p>
+    </section>
+
+    <!-- Articles — separate writing, now last before footer (single file, direct to URL) -->
+    <section style="margin-bottom: 2.5rem;">
+      <SectionHeader kicker="Writing" title="Articles" description="Ramblings of mind - just formatted better." href="/me/articles" hrefLabel="All articles →" />
+      {recentArticles.length === 0 ? (
+        <p style="color: var(--text-muted); border: 1px dashed var(--border); padding: 1.25rem; text-align: center;">No articles yet. Edit <code>src/data/articles.json</code> — single file (title, description, date, link, source, tags).</p>
+      ) : (
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+          {recentArticles.map((a) => (
+            <Card href={a.link} title={a.title} description={a.description} meta={`${new Date(a.date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })} · ↗ ${a.source ?? new URL(a.link).hostname}`} tags={a.tags} />
+          ))}
+        </div>
+      )}
+    </section>
+
+  </div>
+</Base>
+
+<style>
+  .thought-quotes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .thought-quote {
+    display: block;
+    margin: 0;
+    color: inherit;
+    border-left: 3px solid var(--border-strong);
+    padding: 0.25rem 0 0.25rem 1.25rem;
+  }
+  .thought-quote__mark {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--text-faint);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+  .thought-quote__text {
+    font-family: "EB Garamond", Georgia, serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: var(--text);
+    display: block;
+    margin: 0;
+    overflow-wrap: break-word;
+  }
+  @media (max-width: 640px) {
+    .thought-quotes {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    .thought-quote__text {
+      font-size: 1.1rem;
+    }
+  }
+</style>
